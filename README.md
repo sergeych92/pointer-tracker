@@ -1,0 +1,1 @@
+A mouse pointer is followed by a pointer from the center using different shadowing strategies

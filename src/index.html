@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="EN">
+<head>
+    <meta charset="utf-8">
+    <title>SVG Animation</title>
+</head>
+<body>
+    <div class="root">
+        <svg version="1.1"
+            baseProfile="full"
+            width="400"
+            height="350"
+            class="field"
+            xmlns="http://www.w3.org/2000/svg">
+            
+            <g transform="translate(150, 150)">
+                <circle class="center-circle" cx="20" cy="20" r="20" fill="red"/>
+                <g class="pointer" transform="rotate(0 20 20)">
+                    <line x1="20" y1="20" x2="100" y2="20" stroke-width="6" stroke="green" />
+                    <polygon points="100 10, 110 20, 100 30" fill="green" />
+                </g>
+            </g>
+        </svg>
+        <form class="controls">
+            <fieldset id="feederSelector">
+                <legend>Animation feeder</legend>
+                <p>
+                    <label for="pathFeeder">Path follower</label>
+                    <input type="radio" name="feeder" id="pathFeeder" value="PATH" checked>
+                </p>
+                <p>
+                    <label for="steadyFeeder">Steady change (constant rotation and length speed)</label>
+                    <input type="radio" name="feeder" id="steadyFeeder" value="STEADY">
+                </p>
+            </fieldset>
+            <p name="steadyFeederControl">
+                <label for="rotationSpeed">Rotation speed (degrees/s)</label>
+                <input type="number" id="rotationSpeed">
+            </p>
+            <p name="steadyFeederControl">
+                <label for="lengthChangeSpeed">Length change speed (px/s)</label>
+                <input type="number" id="lengthChangeSpeed">
+            </p>
+            <p name="pathFollowerControl">
+                <label for="travelSpeed">Follow speed (px/s)</label>
+                <input type="number" id="travelSpeed">
+            </p>
+        </form>
+    </div>
+</body>
+</html>
