@@ -29,6 +29,10 @@
                     <input type="radio" name="feeder" id="pathFeeder" value="PATH" checked>
                 </p>
                 <p>
+                    <label for="pathFeeder">Target follower</label>
+                    <input type="radio" name="feeder" id="targetFeeder" value="TARGET">
+                </p>
+                <p>
                     <label for="steadyFeeder">Steady change (constant rotation and length speed)</label>
                     <input type="radio" name="feeder" id="steadyFeeder" value="STEADY">
                 </p>
@@ -41,9 +45,13 @@
                 <label for="lengthChangeSpeed">Length change speed (px/s)</label>
                 <input type="number" id="lengthChangeSpeed">
             </p>
-            <p name="pathFollowerControl">
-                <label for="travelSpeed">Follow speed (px/s)</label>
-                <input type="number" id="travelSpeed">
+            <p name="pathFeederControl">
+                <label for="pathTravelSpeed">Follow path speed (px/s)</label>
+                <input type="number" id="pathTravelSpeed">
+            </p>
+            <p name="targetFeederControl">
+                <label for="targetFollowSpeed">Follow target speed (px/s)</label>
+                <input type="number" id="targetFollowSpeed">
             </p>
         </form>
     </div>

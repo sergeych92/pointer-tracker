@@ -1,4 +1,5 @@
 export var AnimFeederTypes = {
     path: 'PATH',
-    steady: 'STEADY'
+    steady: 'STEADY',
+    target: 'TARGET'
 };
