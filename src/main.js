@@ -70,6 +70,19 @@ function drawFrame(deltaT) {
     
     pointerRenderer.rotatePointer(angle);
     pointerRenderer.setPointerLength(length);
+
+    // TODO:
+    // put the pointer in the correct initial state when loaded (init prevPoint and size)
+
+    // add distance-dependent filters:
+    // add triangle change from fat to thin
+    // add smothness filter from smooth to crisp
+
+    // show the angle and distance
+
+    // once a click is made to set a final target:
+    // add a red dot indicating its position
+    // when the pointer reaches the target, change its color from green to yellow or red in 2 seconds
 }
 
 let prevTime = null;
