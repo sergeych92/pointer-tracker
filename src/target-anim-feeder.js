@@ -3,12 +3,15 @@ import { MathUtils } from './math-utils';
 export class TargetAnimFeeder {
     constructor() {
         this._prevPoint = null;
-        this._pointQueue = [];
+        this._nextPoint = null;
         this._speed = 200; // px per second -- travel speed
     }
 
     addPoint(point) {
-        this._pointQueue.push(point);
+        if (!this._prevPoint) {
+            this._prevPoint = point;
+        }
+        this._nextPoint = point;
     }
 
     setSpeed(speed) {
@@ -23,38 +26,26 @@ export class TargetAnimFeeder {
     }
 
     getNextAngleAndLength(deltaT) {
-        if (this._pointQueue.length === 0) {
-            return this._prevPoint
-                ? this._pointToAngleAndLength(this._prevPoint)
-                : {angle: 0, length: 0};
+        if (!this._prevPoint) {
+            return {angle: 0, length: 0};
         }
 
-        if (!this._prevPoint) {
-            this._prevPoint = this._pointQueue.shift();
+        if (this._prevPoint === this._nextPoint) {
             return this._pointToAngleAndLength(this._prevPoint);
         }
 
-        let accumDist = 0;
         const targetDist = this._speed * deltaT / 1000;
+        const actualDist = MathUtils.twoPointsDistance(
+            this._prevPoint.relX, this._prevPoint.relY, this._nextPoint.relX, this._nextPoint.relY);
 
-        while (this._pointQueue.length > 0 && accumDist < targetDist) {
-            const nextPoint = this._pointQueue.shift();
-
-            const travelDist = MathUtils.twoPointsDistance(
-                this._prevPoint.relX, this._prevPoint.relY, nextPoint.relX, nextPoint.relY);
-            if (accumDist + travelDist > targetDist) {
-                this._pointQueue.unshift(nextPoint);
-                const desirableDist = targetDist - accumDist;
-                const midPoint = {
-                    relX: this._prevPoint.relX + (desirableDist / travelDist) * (nextPoint.relX - this._prevPoint.relX),
-                    relY: this._prevPoint.relY + (desirableDist / travelDist) * (nextPoint.relY - this._prevPoint.relY)
-                };
-                this._prevPoint = midPoint;
-                accumDist = targetDist;
-            } else {
-                accumDist += travelDist;
-                this._prevPoint = nextPoint;
-            }
+        if (actualDist > targetDist) {
+            const midPoint = {
+                relX: this._prevPoint.relX + (targetDist / actualDist) * (this._nextPoint.relX - this._prevPoint.relX),
+                relY: this._prevPoint.relY + (targetDist / actualDist) * (this._nextPoint.relY - this._prevPoint.relY)
+            };
+            this._prevPoint = midPoint;
+        } else {
+            this._prevPoint = this._nextPoint;
         }
 
         return this._pointToAngleAndLength(this._prevPoint);
