@@ -6,6 +6,7 @@ import { PathAnimFeeder } from './path-anim-feeder';
 import { TargetAnimFeeder } from './target-anim-feeder';
 import { AnimFeederTypes } from './anim-feeder-types';
 import { SpeedControlsManager } from './speed-controls-manager';
+import { PointerThicknessFilter } from './thickness-pointer-filter';
 
 const fieldEl = document.querySelector('.field');
 const circleEl = document.querySelector('.center-circle');
@@ -19,6 +20,15 @@ const pointerRenderer = new PointerRenderer(circleEl, pointerEl);
 const animSteadyFeeder = new SteadyAnimFeeder();
 const pathAnimFeeder = new PathAnimFeeder();
 const targetAnimFeeder = new TargetAnimFeeder();
+
+const pointerThicknessFilter = new PointerThicknessFilter({
+    viewportDim: {
+        width: fieldEl.clientWidth,
+        height: fieldEl.clientHeight
+    },
+    pointerMax: pointerRenderer.getTriangleBoundaries(),
+    pointerDim: pointerRenderer.getTriangleDim()
+});
 
 speedControlsManager.init({
     listeners: {
@@ -50,6 +60,8 @@ fieldEl.addEventListener('mousemove', e => {
     } else if (selectedAnimFeeder === AnimFeederTypes.target) {
         targetAnimFeeder.addPoint({relX, relY});
     }
+
+    pointerThicknessFilter.setNextPoint({relX, relY});
 });
 
 function drawFrame(deltaT) {
@@ -63,19 +75,24 @@ function drawFrame(deltaT) {
         const response = targetAnimFeeder.getNextAngleAndLength(deltaT);
         angle = response.angle;
         length = response.length;
+
+        pointerThicknessFilter.setPrevPoint(response.point);
+        let thickness = pointerThicknessFilter.getPointerThickness();
+        pointerRenderer.setTriangleWidth(thickness.width);
+        pointerRenderer.setTriangleHeight(thickness.height);
     } else if (selectedAnimFeeder === AnimFeederTypes.steady) {
         angle = animSteadyFeeder.getNextAngle(deltaT);
         length = animSteadyFeeder.getNextLength(deltaT);
     }
     
-    pointerRenderer.rotatePointer(angle);
-    pointerRenderer.setPointerLength(length);
+    pointerRenderer.rotate(angle);
+    pointerRenderer.setLength(length);
+    pointerRenderer.render();
 
     // TODO:
     // put the pointer in the correct initial state when loaded (init prevPoint and size)
 
     // add distance-dependent filters:
-    // add triangle change from fat to thin
     // add smothness filter from smooth to crisp
 
     // show the angle and distance

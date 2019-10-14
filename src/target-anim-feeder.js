@@ -53,6 +53,7 @@ export class TargetAnimFeeder {
 
     _pointToAngleAndLength(point) {
         return {
+            point,
             angle: MathUtils.calcRotationAngle(point.relX, point.relY),
             length: MathUtils.twoPointsDistance(0, 0, point.relX, point.relY)
         };
