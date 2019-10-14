@@ -32,11 +32,18 @@ export class PointerThicknessFilter {
         const pointsDistance = MathUtils.twoPointsDistance(
             this._prevPoint.relX, this._prevPoint.relY, this._nextPoint.relX, this._nextPoint.relY);
 
+        const shrinkRatio = this._thicknessProgressFunc(pointsDistance / this._maxDistance);
+
         return {
             width: this._pointerBoundaries.minWidth
-                + (this._pointerBoundaries.maxWidth - this._pointerBoundaries.minWidth) * pointsDistance / this._maxDistance,
+                + (this._pointerBoundaries.maxWidth - this._pointerBoundaries.minWidth) * shrinkRatio,
             height: this._pointerBoundaries.minHeight
-                + (this._pointerBoundaries.maxHeight - this._pointerBoundaries.minHeight) * pointsDistance / this._maxDistance
+                + (this._pointerBoundaries.maxHeight - this._pointerBoundaries.minHeight) * shrinkRatio
         };
+    }
+
+    // x is supposed to be from 1 to 0 inclusive
+    _thicknessProgressFunc(x) {
+        return 1 - Math.pow((x - 1), 4);
     }
 }
