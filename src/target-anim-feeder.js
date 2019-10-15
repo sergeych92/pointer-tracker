@@ -2,7 +2,6 @@ import { MathUtils } from './math-utils';
 
 export class TargetAnimFeeder {
     constructor() {
-        this._prevPoint = null;
         this._nextPoint = null;
         this._speed = 200; // px per second -- travel speed
     }
@@ -25,37 +24,49 @@ export class TargetAnimFeeder {
         return this._speed;
     }
 
-    getNextAngleAndLength(deltaT) {
+    getPosition() {
         if (!this._prevPoint) {
-            return {angle: 0, length: 0};
+            throw new Error('Position has not been set yet.');
+        }
+        return this._prevPoint;
+    }
+
+    setPosition({x, y}) {
+        if (!MathUtils.isNumber(x) || !MathUtils.isNumber(y)) {
+            throw new Error('Position must be provided in two coordinates.');
+        }
+        this._prevPoint = {x, y};
+        this._nextPoint = {x,y};
+    }
+
+    getNextAngleAndLength(deltaT) {
+        if (this._prevPoint && this._nextPoint) {
+            const targetDist = this._speed * deltaT / 1000;
+            const actualDist = MathUtils.twoPointsDistance(
+                this._prevPoint.x, this._prevPoint.y, this._nextPoint.x, this._nextPoint.y);
+    
+            if (actualDist > targetDist) {
+                const midPoint = {
+                    x: this._prevPoint.x + (targetDist / actualDist) * (this._nextPoint.x - this._prevPoint.x),
+                    y: this._prevPoint.y + (targetDist / actualDist) * (this._nextPoint.y - this._prevPoint.y)
+                };
+                this._prevPoint = midPoint;
+            } else {
+                this._prevPoint = this._nextPoint;
+            }
         }
 
-        if (this._prevPoint === this._nextPoint) {
+        if (this._prevPoint) {
             return this._pointToAngleAndLength(this._prevPoint);
-        }
-
-        const targetDist = this._speed * deltaT / 1000;
-        const actualDist = MathUtils.twoPointsDistance(
-            this._prevPoint.relX, this._prevPoint.relY, this._nextPoint.relX, this._nextPoint.relY);
-
-        if (actualDist > targetDist) {
-            const midPoint = {
-                relX: this._prevPoint.relX + (targetDist / actualDist) * (this._nextPoint.relX - this._prevPoint.relX),
-                relY: this._prevPoint.relY + (targetDist / actualDist) * (this._nextPoint.relY - this._prevPoint.relY)
-            };
-            this._prevPoint = midPoint;
         } else {
-            this._prevPoint = this._nextPoint;
+            return this._pointToAngleAndLength({x: 0, y: 0});
         }
-
-        return this._pointToAngleAndLength(this._prevPoint);
     }
 
     _pointToAngleAndLength(point) {
         return {
-            point,
-            angle: MathUtils.calcRotationAngle(point.relX, point.relY),
-            length: MathUtils.twoPointsDistance(0, 0, point.relX, point.relY)
+            ...MathUtils.pointToAngleAndLength(point.x, point.y),
+            point: point
         };
     }
 }

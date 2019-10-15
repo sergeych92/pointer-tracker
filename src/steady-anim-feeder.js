@@ -6,16 +6,32 @@ export class SteadyAnimFeeder {
         this._prevLength = null;
         this._anglesQueue = [];
         this._lengthsQueue = [];
-        this._rotationSpeed = 180; // degrees per second
-        this._lengthChangeSpeed = 200; // px per second -- length change speed
+        this._rotationSpeed = 90; // degrees per second
+        this._lengthChangeSpeed = 150; // px per second -- length change speed
     }
 
     addPoint(point) {
-        const angle = MathUtils.calcRotationAngle(point.relX, point.relY);
+        const angle = MathUtils.calcRotationAngle(point.x, point.y);
         this._anglesQueue.push(angle);
 
-        const length = MathUtils.twoPointsDistance(0, 0, point.relX, point.relY);
+        const length = MathUtils.twoPointsDistance(0, 0, point.x, point.y);
         this._lengthsQueue.push(length);
+    }
+
+    getPosition() {
+        if (!MathUtils.isNumber(this._prevAngle) || !MathUtils.isNumber(this._prevLength)) {
+            throw new Error('Position has not been set yet.');
+        }
+        return MathUtils.angleAndLengthToPoint(this._prevAngle, this._prevLength);
+    }
+
+    setPosition({x, y}) {
+        if (!MathUtils.isNumber(x) || !MathUtils.isNumber(y)) {
+            throw new Error('Position must be provided in two coordinates.');
+        }
+        const angleAndLength = MathUtils.pointToAngleAndLength(x, y);
+        this._prevAngle = angleAndLength.angle;
+        this._prevLength = angleAndLength.length;
     }
 
     setRotationSpeed(speed) {
@@ -45,7 +61,7 @@ export class SteadyAnimFeeder {
             return this._prevAngle || 0;
         }
 
-        if (!this._prevAngle) {
+        if (!MathUtils.isNumber(this._prevAngle)) {
             this._prevAngle = this._anglesQueue.shift();
             return this._prevAngle;
         }
@@ -88,7 +104,7 @@ export class SteadyAnimFeeder {
             return this._prevLength || 0;
         }
 
-        if (!this._prevLength) {
+        if (!MathUtils.isNumber(this._prevLength)) {
             this._prevLength = this._lengthsQueue.shift();
             return this._prevLength;
         }

@@ -22,11 +22,25 @@ export class PathAnimFeeder {
         return this._speed;
     }
 
+    getPosition() {
+        if (!this._prevPoint) {
+            throw new Error('Position has not been set yet.');
+        }
+        return this._prevPoint;
+    }
+
+    setPosition({x, y}) {
+        if (!MathUtils.isNumber(x) || !MathUtils.isNumber(y)) {
+            throw new Error('Position must be provided in two coordinates.');
+        }
+        this._prevPoint = {x, y};
+    }
+
     getNextAngleAndLength(deltaT) {
         if (this._pointQueue.length === 0) {
             return this._prevPoint
                 ? this._pointToAngleAndLength(this._prevPoint)
-                : {angle: 0, length: 0};
+                : this._pointToAngleAndLength({x: 0, y: 0});
         }
 
         if (!this._prevPoint) {
@@ -41,13 +55,13 @@ export class PathAnimFeeder {
             const nextPoint = this._pointQueue.shift();
 
             const travelDist = MathUtils.twoPointsDistance(
-                this._prevPoint.relX, this._prevPoint.relY, nextPoint.relX, nextPoint.relY);
+                this._prevPoint.x, this._prevPoint.y, nextPoint.x, nextPoint.y);
             if (accumDist + travelDist > targetDist) {
                 this._pointQueue.unshift(nextPoint);
                 const desirableDist = targetDist - accumDist;
                 const midPoint = {
-                    relX: this._prevPoint.relX + (desirableDist / travelDist) * (nextPoint.relX - this._prevPoint.relX),
-                    relY: this._prevPoint.relY + (desirableDist / travelDist) * (nextPoint.relY - this._prevPoint.relY)
+                    x: this._prevPoint.x + (desirableDist / travelDist) * (nextPoint.x - this._prevPoint.x),
+                    y: this._prevPoint.y + (desirableDist / travelDist) * (nextPoint.y - this._prevPoint.y)
                 };
                 this._prevPoint = midPoint;
                 accumDist = targetDist;
@@ -62,8 +76,8 @@ export class PathAnimFeeder {
 
     _pointToAngleAndLength(point) {
         return {
-            angle: MathUtils.calcRotationAngle(point.relX, point.relY),
-            length: MathUtils.twoPointsDistance(0, 0, point.relX, point.relY)
+            ...MathUtils.pointToAngleAndLength(point.x, point.y),
+            point: point
         };
     }
 }

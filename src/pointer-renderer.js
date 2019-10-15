@@ -1,7 +1,9 @@
+import { MathUtils } from "./math-utils";
+
 export class PointerRenderer {
-    constructor(circleEl, pointerEl) {
-        this._circleEl = circleEl;
-        this._pointerEl = pointerEl;
+    constructor() {
+        this._circleEl = document.querySelector('.center-circle');
+        this._pointerEl = document.querySelector('.pointer');
 
         this._lineEl = this._pointerEl.firstElementChild;
         this._triangleEl = this._pointerEl.lastElementChild;
@@ -32,6 +34,24 @@ export class PointerRenderer {
 
     getTriangleDim() {
         return {width: this._triangleWidth, height: this._triangleHeight};
+    }
+
+    getCoordsRelativeToCenter(mouseClientX, mouseCilentY) {
+        const circleOrigin = this._circleEl.getBoundingClientRect();
+        const x = mouseClientX - circleOrigin.left - this._circleRadius;
+        const y = mouseCilentY - circleOrigin.top - this._circleRadius;
+        return {x, y};
+    }
+
+    getPointerCoords() {
+        return MathUtils.angleAndLengthToPoint(this._angle, this._pointerLength);
+    }
+
+    getPointerAngleAndLength() {
+        return {
+            angle: this._angle,
+            length: this._pointerLength
+        };
     }
 
     // x and y are relative to the rotation origin

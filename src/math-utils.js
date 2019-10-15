@@ -31,4 +31,23 @@ export class MathUtils {
             Math.pow((x1 - x2), 2) + Math.pow((y1 - y2), 2)
         );
     }
+
+    static pointToAngleAndLength(x, y) {
+        return {
+            angle: MathUtils.calcRotationAngle(x, y),
+            length: MathUtils.twoPointsDistance(0, 0, x, y)
+        };
+    }
+
+    static angleAndLengthToPoint(angle, length) {
+        const angleRadians = angle / 180 * Math.PI;
+        return {
+            x: length * Math.cos(angleRadians),
+            y: length * Math.sin(angleRadians)
+        };
+    }
+
+    static isNumber(n) {
+        return typeof n === 'number';
+    }
 }

@@ -26,13 +26,19 @@ export class SpeedControlsManager {
             onTargetFollowSpeedChange
         },
         initData: {
+            selectedAnimFeeder,
             rotationSpeed,
             lengthChangeSpeed,
             pathTravelSpeed,
             targetFollowSpeed
         }
     }) {
+        this._selectedAnimFeeder = selectedAnimFeeder;
         this._onAnimFeederSelected = onAnimFeederSelected;
+        
+        const activeRadioEl = this._feederSelectorEl.querySelector(`input[type=radio][value=${selectedAnimFeeder}]`);
+        activeRadioEl.checked = true;
+
 
         this._feederSelectorEl.addEventListener('change', e => {
             this._selectedAnimFeeder = e.target.value;
@@ -61,7 +67,7 @@ export class SpeedControlsManager {
         });
     }
 
-    _updateControlVisibility(onAnimFeederSelected) {
+    _updateControlVisibility() {
         if (this._selectedAnimFeeder === AnimFeederTypes.path) {
             this._setPathFeederVisibility(true);
             this._setSteadyFeederVisibility(false);

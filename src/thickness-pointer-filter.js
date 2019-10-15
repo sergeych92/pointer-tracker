@@ -30,7 +30,7 @@ export class PointerThicknessFilter {
         }
 
         const pointsDistance = MathUtils.twoPointsDistance(
-            this._prevPoint.relX, this._prevPoint.relY, this._nextPoint.relX, this._nextPoint.relY);
+            this._prevPoint.x, this._prevPoint.y, this._nextPoint.x, this._nextPoint.y);
 
         const shrinkRatio = this._thicknessProgressFunc(pointsDistance / this._maxDistance);
 

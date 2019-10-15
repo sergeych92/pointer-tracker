@@ -7,19 +7,33 @@ import { TargetAnimFeeder } from './target-anim-feeder';
 import { AnimFeederTypes } from './anim-feeder-types';
 import { SpeedControlsManager } from './speed-controls-manager';
 import { PointerThicknessFilter } from './thickness-pointer-filter';
+import { MathUtils } from './math-utils';
 
 const fieldEl = document.querySelector('.field');
-const circleEl = document.querySelector('.center-circle');
-const pointerEl = document.querySelector('.pointer');
-
-
-let selectedAnimFeeder = null;
+let selectedAnimFeeder = AnimFeederTypes.steady;
 
 const speedControlsManager = new SpeedControlsManager();
-const pointerRenderer = new PointerRenderer(circleEl, pointerEl);
-const animSteadyFeeder = new SteadyAnimFeeder();
+const pointerRenderer = new PointerRenderer();
+
+// animation feeders (convert mousemove events into pointer position)
+const steadyAnimFeeder = new SteadyAnimFeeder();
+steadyAnimFeeder.setPosition(pointerRenderer.getPointerCoords());
+
 const pathAnimFeeder = new PathAnimFeeder();
+pathAnimFeeder.setPosition(pointerRenderer.getPointerCoords());
+
 const targetAnimFeeder = new TargetAnimFeeder();
+targetAnimFeeder.setPosition(pointerRenderer.getPointerCoords());
+
+function getAnimFeeder(selectedFlag) {
+    if (selectedFlag === AnimFeederTypes.path) {
+        return pathAnimFeeder;
+    } else if (selectedFlag === AnimFeederTypes.steady) {
+        return steadyAnimFeeder;
+    } else if (selectedFlag === AnimFeederTypes.target) {
+        return targetAnimFeeder;
+    }
+}
 
 const pointerThicknessFilter = new PointerThicknessFilter({
     viewportDim: {
@@ -32,61 +46,60 @@ const pointerThicknessFilter = new PointerThicknessFilter({
 
 speedControlsManager.init({
     listeners: {
-        onAnimFeederSelected: selected => {
-            selectedAnimFeeder = selected;
+        onAnimFeederSelected: nextSelected => {
+            const prevAnimFeeder = getAnimFeeder(selectedAnimFeeder);
+            const nextAnimFeeder = getAnimFeeder(nextSelected);
+            selectedAnimFeeder = nextSelected;
+
+            nextAnimFeeder.setPosition(prevAnimFeeder.getPosition());
         },
-        onRotationSpeedChange: speed => animSteadyFeeder.setRotationSpeed(speed),
-        onLengthChangeSpeedChange: speed => animSteadyFeeder.setLengthChangeSpeed(speed),
+        onRotationSpeedChange: speed => steadyAnimFeeder.setRotationSpeed(speed),
+        onLengthChangeSpeedChange: speed => steadyAnimFeeder.setLengthChangeSpeed(speed),
         onPathTravelSpeedChange: speed => pathAnimFeeder.setSpeed(speed),
         onTargetFollowSpeedChange: speed => targetAnimFeeder.setSpeed(speed)
     },
     initData: {
-        rotationSpeed: animSteadyFeeder.getRotationSpeed(),
-        lengthChangeSpeed: animSteadyFeeder.getLengthChangeSpeed(),
+        selectedAnimFeeder, 
+        rotationSpeed: steadyAnimFeeder.getRotationSpeed(),
+        lengthChangeSpeed: steadyAnimFeeder.getLengthChangeSpeed(),
         pathTravelSpeed: pathAnimFeeder.getSpeed(),
         targetFollowSpeed: targetAnimFeeder.getSpeed()
     }
 });
 
 fieldEl.addEventListener('mousemove', e => {
-    const circleOrigin = circleEl.getBoundingClientRect();
-    const relX = e.clientX - circleOrigin.left - pointerRenderer.getCircleRadius();
-    const relY = e.clientY - circleOrigin.top - pointerRenderer.getCircleRadius();
-
-    if (selectedAnimFeeder === AnimFeederTypes.path) {
-        pathAnimFeeder.addPoint({relX, relY});
-    } else if (selectedAnimFeeder === AnimFeederTypes.steady) {
-        animSteadyFeeder.addPoint({relX, relY});
-    } else if (selectedAnimFeeder === AnimFeederTypes.target) {
-        targetAnimFeeder.addPoint({relX, relY});
-    }
-
-    pointerThicknessFilter.setNextPoint({relX, relY});
+    const point = pointerRenderer.getCoordsRelativeToCenter(e.clientX, e.clientY);
+    getAnimFeeder(selectedAnimFeeder).addPoint(point);
+    pointerThicknessFilter.setNextPoint(point);
 });
 
 function drawFrame(deltaT) {
-    let angle, length;
+    let drawnPointerInfo;
 
+    // calculate pointer length and angle
     if (selectedAnimFeeder === AnimFeederTypes.path) {
-        const response = pathAnimFeeder.getNextAngleAndLength(deltaT);
-        angle = response.angle;
-        length = response.length;
+        drawnPointerInfo = pathAnimFeeder.getNextAngleAndLength(deltaT);
     } else if (selectedAnimFeeder === AnimFeederTypes.target) {
-        const response = targetAnimFeeder.getNextAngleAndLength(deltaT);
-        angle = response.angle;
-        length = response.length;
-
-        pointerThicknessFilter.setPrevPoint(response.point);
-        let thickness = pointerThicknessFilter.getPointerThickness();
-        pointerRenderer.setTriangleWidth(thickness.width);
-        pointerRenderer.setTriangleHeight(thickness.height);
+        drawnPointerInfo = targetAnimFeeder.getNextAngleAndLength(deltaT);
     } else if (selectedAnimFeeder === AnimFeederTypes.steady) {
-        angle = animSteadyFeeder.getNextAngle(deltaT);
-        length = animSteadyFeeder.getNextLength(deltaT);
+        const angle = steadyAnimFeeder.getNextAngle(deltaT);
+        const length = steadyAnimFeeder.getNextLength(deltaT);
+        drawnPointerInfo = {
+            angle,
+            length,
+            point: MathUtils.angleAndLengthToPoint(angle, length)
+        };
     }
     
-    pointerRenderer.rotate(angle);
-    pointerRenderer.setLength(length);
+    // calculate pointer thickness
+    pointerThicknessFilter.setPrevPoint(drawnPointerInfo.point);
+    let thickness = pointerThicknessFilter.getPointerThickness();
+    
+    // set coordinates and sizes and render
+    pointerRenderer.setTriangleWidth(thickness.width);
+    pointerRenderer.setTriangleHeight(thickness.height);
+    pointerRenderer.rotate(drawnPointerInfo.angle);
+    pointerRenderer.setLength(drawnPointerInfo.length);
     pointerRenderer.render();
 
     // TODO:
@@ -112,3 +125,5 @@ requestAnimationFrame(function nextFrame(time) {
     drawFrame(deltaT);
     requestAnimationFrame(nextFrame);
 });
+
+pointerRenderer.render();
